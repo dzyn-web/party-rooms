@@ -138,6 +138,7 @@ function photoHtml(h) {
 
 // Удобства: сначала 5 главных, остальные — по кнопке «Показать все удобства»
 const TOP_FEATURES = 5;
+const moreCount = (h) => Math.max(0, h.features.length - TOP_FEATURES) + (h.extras || []).length;
 function renderBaths() {
   $('bath-list').innerHTML = data.halls.map((h, n) => {
     const st = hallState(h);
@@ -146,8 +147,10 @@ function renderBaths() {
       <div class="bath-text">
         <h3 id="bath-${h.id}">${esc(h.name)}</h3>
         <p class="bath-about">${esc(h.about)}</p>
-        <ul class="bath-features" id="feat-${h.id}">${h.features.map((f, i) => `<li${i >= TOP_FEATURES ? ' class="more"' : ''}>${esc(f)}</li>`).join('')}</ul>
-        ${h.features.length > TOP_FEATURES ? `<button type="button" class="feat-more" data-feat="${h.id}" aria-expanded="false" aria-controls="feat-${h.id}">Показать все удобства <span>+${h.features.length - TOP_FEATURES}</span></button>` : ''}
+        <ul class="bath-features" id="feat-${h.id}">${h.features.map((f, i) => `<li${i >= TOP_FEATURES ? ' class="more"' : ''}>${esc(f)}</li>`).join('')}${
+          (h.extras || []).length ? `<li class="more feat-sub">Дополнительные услуги</li>${h.extras.map((f) => `<li class="more extra-li">${esc(f)}</li>`).join('')}` : ''}</ul>
+        ${moreCount(h) ? `<button type="button" class="feat-more" data-feat="${h.id}" aria-expanded="false" aria-controls="feat-${h.id}">Показать всё <span>+${moreCount(h)}</span></button>` : ''}
+        ${h.note ? `<p class="bath-warn">${esc(h.note)}</p>` : ''}
         <dl class="bath-prices">
           <div><dt>Вс–чт</dt><dd>${rub(h.priceWeekday)}</dd></div>
           <div><dt>Пятница</dt><dd>${rub(h.priceFriday)}</dd></div>
@@ -179,8 +182,7 @@ $('bath-list').addEventListener('click', (e) => {
     const list = $('feat-' + more.dataset.feat);
     const open = list.classList.toggle('open');
     more.setAttribute('aria-expanded', open);
-    const rest = list.querySelectorAll('.more').length;
-    more.innerHTML = open ? 'Свернуть' : `Показать все удобства <span>+${rest}</span>`;
+    more.innerHTML = open ? 'Свернуть' : `Показать всё <span>+${moreCount(hallById(Number(more.dataset.feat)))}</span>`;
     return;
   }
   const d = e.target.closest('[data-photo]');

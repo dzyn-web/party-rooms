@@ -546,3 +546,10 @@ select:focus, .field input:focus, .field textarea:focus { border-color: var(--fg
 /* ---------- Доплата за гостей — отдельными строками ---------- */
 #guests-hint .extra { display: block; margin-top: 6px; color: var(--accent); font-weight: 600; }
 #guests-hint .extra + .extra { margin-top: 2px; }
+
+/* Подзаголовок «Дополнительные услуги» внутри раскрытого списка — во всю ширину, без рамки */
+.bath-features li.feat-sub { grid-column: 1 / -1; min-height: 0; padding: 14px 0 2px; border: 0; background: none; font-family: var(--font-display); font-size: 15px; color: var(--brass); }
+.bath-features li.feat-sub::before { display: none; }
+.bath-features li.extra-li::before { width: 6px; height: 6px; margin-top: -3px; border: 0; border-radius: 50%; background: var(--brass); transform: none; }
+/* Важное предупреждение (мангал, баня…) — отдельно, жирно, всегда на виду */
+.bath-warn { margin-top: 16px; padding: 14px 16px 14px 18px; border-radius: 12px; border: 1px solid rgba(255, 155, 138, .45); border-left: 3px solid var(--warn); background: rgba(255, 155, 138, .08); font-weight: 700; font-size: 15px; line-height: 1.45; color: var(--fg); }
