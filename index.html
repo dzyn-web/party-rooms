@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Party Rooms — студии для праздника с ночёвкой в Иркутске</title>
+  <meta name="description" content="Три студии для дня рождения, корпоратива и вечеринки с ночёвкой: караоке, светомузыка, кальян, 3 спальни. Иркутск, ул. Грибоедова, 108. Бронирование онлайн по суткам.">
+  <meta name="theme-color" content="#120d1a">
+  <meta property="og:title" content="Party Rooms — праздник с ночёвкой в Иркутске">
+  <meta property="og:description" content="Три студии с караоке, светомузыкой и спальнями. Бронь онлайн по суткам.">
+  <meta property="og:image" content="img/hero.jpg">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="img/hero.jpg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="site">
+  <a class="skip" href="#halls">К выбору студии</a>
+
+  <!-- Эмблема: диско-шар. Под другой бренд меняется только этот блок -->
+  <svg class="sprite" width="0" height="0" aria-hidden="true">
+    <symbol id="emblem" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="24" cy="26" r="17"/><path d="M7 26h34M10 17h28M10 35h28M24 9c-6 5-6 29 0 34M24 9c6 5 6 29 0 34"/><path d="M24 4v5"/></g></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></g></symbol>
+  </svg>
+
+  <header class="top over" id="top">
+    <a class="brand" href="./" aria-label="Party Rooms, на главную">
+      <svg class="brand-mark" aria-hidden="true"><use href="#emblem"/></svg>
+      <span class="brand-text"><b>Party Rooms</b><small>пати румс · иркутск</small></span>
+    </a>
+    <nav class="top-nav" aria-label="Разделы">
+      <a href="#halls">Студии</a>
+      <a href="#about">Что внутри</a>
+      <a href="#faq">Условия</a>
+      <a href="#contacts">Контакты</a>
+    </nav>
+    <button class="btn btn-primary" type="button" data-book>Забронировать</button>
+    <!-- Телефон и адрес под логотипом: видны сразу при открытии, при прокрутке строка прячется -->
+    <div class="top-contacts">
+      <a class="phone-link" href="tel:+79996409666"><svg aria-hidden="true"><use href="#i-phone"/></svg>8 (999) 640-96-66</a>
+      <a href="https://yandex.ru/maps/?text=%D0%98%D1%80%D0%BA%D1%83%D1%82%D1%81%D0%BA%2C%20%D1%83%D0%BB%D0%B8%D1%86%D0%B0%20%D0%93%D1%80%D0%B8%D0%B1%D0%BE%D0%B5%D0%B4%D0%BE%D0%B2%D0%B0%2C%20108" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-pin"/></svg>г. Иркутск, ул. Грибоедова, 108</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. Первый экран -->
+    <section class="cover" aria-labelledby="hero-title">
+      <img class="cover-img" src="img/hero.jpg" alt="" width="2000" height="1404" fetchpriority="high">
+      <div class="cover-inner">
+        <h1 id="hero-title" class="cover-title"><span>Праздники</span> <span>вечеринки</span> <span>место для</span> <span>мероприятий</span></h1>
+        <div class="cover-foot">
+          <div class="cover-text">
+            <p class="cover-lead"><b>PARTY ROOMS (Пати Румс)</b> — пространство, где праздники проходят ярко, а вечера надолго остаются в памяти.</p>
+            <p class="cover-lead">Идеально для компании: день рождения, корпоратив, юбилей или просто шумный вечер с друзьями.</p>
+            <p class="cover-lead">Три студии на выбор: караоке, светомузыка, кальян, всё необходимое для больших компаний и три спальни, чтобы остаться на ночь.</p>
+            <div class="actions">
+              <button class="btn btn-primary" type="button" data-book>Выбрать дату</button>
+              <a class="link-action" href="#halls">Посмотреть студии</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Студии: сначала все три карточкой, ниже — каждая подробно -->
+    <section class="baths" id="halls" aria-labelledby="halls-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Студии</p>
+            <h2 id="halls-title">Три различные студии на выбор</h2>
+          </div>
+          <p class="label">HYPE и FLEX — по 55 м², комфортно до 12 гостей. NEON — 100 м², комфортно до 25 гостей.</p>
+        </div>
+        <div class="studio-cards" id="studio-cards"></div>
+        <div id="bath-list" aria-live="polite"><div class="bath-skeleton" aria-hidden="true"></div></div>
+        <p class="load-error" id="load-error" hidden>Не получилось загрузить студии. Обновите страницу или позвоните: <a class="phone-link" href="tel:+79996409666">+7 (999) 640-96-66</a>.</p>
+      </div>
+    </section>
+
+    <!-- 3. Что внутри каждой студии -->
+    <section class="about" id="about" aria-labelledby="about-title">
+      <div class="wrap about-grid">
+        <div class="about-text">
+          <p class="kicker">Что внутри</p>
+          <h2 id="about-title">Всё для праздника уже на месте</h2>
+          <p class="about-lead">Приносите еду, торт и хорошее настроение. Посуда, постельное бельё, полотенца и уборка после праздника — уже в цене.</p>
+          <dl class="about-points">
+            <div><dt>Для вечеринки</dt><dd>Караоке на 2 микрофона, мощная колонка, светомузыка и зона для танцев, Smart TV, кальян.</dd></div>
+            <div><dt>Для застолья</dt><dd>Стол на 10 гостей, кухня с плитой, микроволновкой, холодильником и посудой на 10 персон.</dd></div>
+            <div><dt>Для ночёвки</dt><dd>Три отдельные спальни и диван — 8 спальных мест, бельё и средства гигиены включены.</dd></div>
+          </dl>
+        </div>
+        <figure class="about-photos">
+          <img class="ph-tall" src="img/table.jpg" alt="Кальян в студии Neon" width="1141" height="1600" loading="lazy">
+          <img class="ph-small" src="img/lights.jpg" alt="Микрофоны для караоке" width="1600" height="998" loading="lazy">
+        </figure>
+      </div>
+    </section>
+
+    <!-- 4. Дополнительно -->
+    <section class="rituals" id="extras" aria-labelledby="extras-title">
+      <div class="wrap rituals-grid">
+        <div class="rituals-head">
+          <p class="kicker">Дополнительно</p>
+          <h2 id="extras-title">Что добавить к празднику</h2>
+          <p>Отмеченное «входит» уже в цене. Остальное напишите в комментарии к брони — подготовим к вашему приезду.</p>
+        </div>
+        <ul class="menu">
+          <li><div class="menu-row"><h3>Кальян</h3><span class="dots" aria-hidden="true"></span><b>входит</b></div><p>Оборудование в аренде; табак и угли — свои или купите у нас</p></li>
+          <li><div class="menu-row"><h3>Уборка после праздника</h3><span class="dots" aria-hidden="true"></span><b>входит</b></div><p>Просто уезжайте утром — всё уберём сами</p></li>
+          <li><div class="menu-row"><h3>Фотозона</h3><span class="dots" aria-hidden="true"></span><b>по запросу</b></div><p>Несколько готовых вариантов на выбор</p></li>
+          <li><div class="menu-row"><h3>Второй кальян</h3><span class="dots" aria-hidden="true"></span><b>по запросу</b></div><p>Если одного на компанию мало</p></li>
+          <li><div class="menu-row"><h3>Настольные игры</h3><span class="dots" aria-hidden="true"></span><b>входит</b></div><p>Покер, твистер, нарды, шахматы, магнитный бой и другие</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 5. Отзывы: настоящая оценка в 2ГИС, без выдуманных цитат -->
+    <section class="reviews" id="reviews" aria-labelledby="reviews-title">
+      <div class="wrap reviews-grid">
+        <div class="reviews-head">
+          <p class="kicker">Отзывы</p>
+          <h2 id="reviews-title">5,0 по 183 отзывам</h2>
+          <p class="label">Оценка гостей в 2ГИС.</p>
+        </div>
+        <div class="quote-stage">
+          <p class="about-lead">Гости чаще всего хвалят неоновую комнату, звук и то, что в студии нет посторонних — только ваша компания.</p>
+          <div class="actions"><a class="btn btn-secondary" href="https://2gis.ru/irkutsk/firm/70000001075268393/tab/reviews" target="_blank" rel="noopener">Читать отзывы в 2ГИС</a></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Условия -->
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <div class="wrap faq-grid">
+        <div>
+          <p class="kicker">Условия</p>
+          <h2 id="faq-title">Перед бронью</h2>
+        </div>
+        <div class="faq-list">
+          <details><summary>Как закрепить дату?</summary><p>После брони на сайте внесите предоплату 3 000 ₽ — реквизиты появятся сразу. Администратор подтвердит бронь. Без предоплаты бронь снимается.</p></details>
+          <details><summary>Сколько гостей можно?</summary><p>В тариф входит до 8 гостей. За каждого дополнительного гостя — доплата, она сразу видна в сумме при брони. Можно с детьми, с питомцами — нет.</p></details>
+          <details><summary>Какой залог и что нужно при заселении?</summary><p>Залог за сохранность — 5 000 ₽, возвращается при выезде, если всё в порядке. Договор оформляется на месте, понадобится паспорт. Бронирующему должно быть больше 18 лет.</p></details>
+          <details><summary>Во сколько заезд и выезд?</summary><p>Заезд с 18:00, выезд до 12:00 следующего дня. Сдвинуть время можно по договорённости.</p></details>
+          <details><summary>Можно ли курить?</summary><p>В студии — только кальян. Для сигарет есть отдельная зона для курения на этаже. Окна закрыты, работает кондиционер.</p></details>
+          <details><summary>Что если планы изменятся?</summary><p>При отмене брони менее чем за 7 дней предоплата не возвращается и дата не переносится. Раньше — договоримся.</p></details>
+          <details><summary>Что важно знать заранее?</summary><p>Студии находятся в ТЦ «Грибоедовский» на 3 этаже. Санузел в каждой студии, душа нет. Мангала, бани и бассейна нет.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Контакты -->
+    <section class="contacts" id="contacts" aria-labelledby="contacts-title">
+      <div class="contacts-grid">
+        <div class="contacts-text">
+          <p class="kicker">Контакты</p>
+          <h2 id="contacts-title">Как нас найти</h2>
+          <p class="contacts-address">Иркутск, ул. Грибоедова, 108, ТЦ «Грибоедовский», 3 этаж</p>
+          <p class="label">Рядом остановка общественного транспорта, у ТЦ парковка.</p>
+          <p class="contacts-links">
+            <a class="phone-link" href="tel:+79996409666">+7 (999) 640-96-66</a>
+            <a href="https://t.me/+79996409666" target="_blank" rel="noopener">Написать в Telegram</a>
+            <a href="https://wa.me/79996409666" target="_blank" rel="noopener">WhatsApp</a>
+          </p>
+          <div class="actions">
+            <button class="btn btn-primary" type="button" data-book>Забронировать студию</button>
+            <a class="link-action" href="https://yandex.ru/maps/?text=%D0%98%D1%80%D0%BA%D1%83%D1%82%D1%81%D0%BA%2C%20%D1%83%D0%BB%D0%B8%D1%86%D0%B0%20%D0%93%D1%80%D0%B8%D0%B1%D0%BE%D0%B5%D0%B4%D0%BE%D0%B2%D0%B0%2C%20108" target="_blank" rel="noopener">Построить маршрут</a>
+          </div>
+        </div>
+        <div class="contacts-map">
+          <iframe src="https://yandex.ru/map-widget/v1/?text=%D0%98%D1%80%D0%BA%D1%83%D1%82%D1%81%D0%BA%2C%20%D1%83%D0%BB%D0%B8%D1%86%D0%B0%20%D0%93%D1%80%D0%B8%D0%B1%D0%BE%D0%B5%D0%B4%D0%BE%D0%B2%D0%B0%2C%20108&amp;z=16" title="Party Rooms на карте" loading="lazy"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <a class="brand" href="./" aria-label="На главную">
+      <svg class="brand-mark" aria-hidden="true"><use href="#emblem"/></svg>
+      <span class="brand-text"><b>Party Rooms</b><small>пати румс · иркутск</small></span>
+    </a>
+    <span>Иркутск, ул. Грибоедова, 108. Заезд с 18:00, выезд до 12:00</span>
+    <a href="privacy.html">Политика конфиденциальности</a>
+  </footer>
+
+  <!-- Бронирование: выезжающая панель -->
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <section class="sheet-body" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <header class="sheet-head">
+        <div>
+          <p class="muted" id="sheet-sub">Бронирование</p>
+          <h2 id="sheet-title">Студия</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close aria-label="Закрыть">×</button>
+      </header>
+
+      <form id="form" class="book-form" novalidate>
+        <fieldset class="field-block">
+          <legend class="block-title">Студия</legend>
+          <div class="hall-pick" id="hall-pick" role="radiogroup" aria-label="Студия"></div>
+        </fieldset>
+
+        <fieldset class="field-block">
+          <legend class="block-title">Дата заезда</legend>
+          <div class="cal" id="dates"></div>
+          <p class="hint stay" id="dates-hint"></p>
+        </fieldset>
+
+        <fieldset class="field-block">
+          <legend class="block-title">Сколько гостей</legend>
+          <div class="stepper">
+            <button type="button" id="g-minus" aria-label="Меньше гостей">−</button>
+            <output id="guests" aria-live="polite">8</output>
+            <button type="button" id="g-plus" aria-label="Больше гостей">+</button>
+          </div>
+          <p class="hint" id="guests-hint"></p>
+          <div class="overflow" id="overflow" hidden></div>
+        </fieldset>
+
+        <div class="field-block">
+          <label class="field"><span>Имя</span><input id="name" name="name" autocomplete="name" maxlength="60" required></label>
+          <label class="field"><span>Телефон</span><input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 (9__) ___-__-__" required></label>
+          <label class="field"><span>Комментарий, если нужно</span><textarea id="comment" name="comment" rows="2" maxlength="500" placeholder="Повод, фотозона, второй кальян"></textarea></label>
+          <!-- Поле-ловушка для ботов: людям не видно -->
+          <label class="trap" aria-hidden="true">Сайт <input id="website" name="website" tabindex="-1" autocomplete="off"></label>
+          <label class="consent"><input type="checkbox" id="consent" required> <span>Согласен на обработку имени и телефона для брони по <a href="privacy.html" target="_blank">политике конфиденциальности</a></span></label>
+        </div>
+
+        <div class="summary">
+          <div>
+            <div class="total" id="total">—</div>
+            <div class="hint" id="summary-hint"></div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="submit" disabled>Забронировать</button>
+        </div>
+        <p class="error" id="error" role="alert"></p>
+      </form>
+
+      <div class="done" id="done" hidden>
+        <!-- Шаг 1: бронь принята — фото выбранной студии на «полароиде» -->
+        <div id="done-main">
+          <div class="print" aria-hidden="true"><div class="print-img"><img id="done-photo" src="" alt=""></div><small id="done-hall">Party Rooms</small></div>
+          <h3 id="done-title">Бронь принята</h3>
+          <dl class="done-list" id="done-list"></dl>
+          <p class="done-prepay" id="done-prepay"></p>
+          <button class="btn btn-primary btn-pay" type="button" id="go-pay">Готов внести предоплату</button>
+        </div>
+        <!-- Шаг 2: как оплатить — QR-код или перевод по номеру телефона -->
+        <div id="pay" hidden>
+          <h3 id="pay-title">Предоплата</h3>
+          <p class="pay-lead">Выберите удобный способ. После оплаты администратор подтвердит бронь.</p>
+          <div class="pay-tabs" role="tablist">
+            <button type="button" class="chip" role="tab" data-pay="qr" aria-pressed="true">По QR-коду</button>
+            <button type="button" class="chip" role="tab" data-pay="phone" aria-pressed="false">По номеру телефона</button>
+          </div>
+          <div class="pay-box" id="pay-qr"></div>
+          <div class="pay-box" id="pay-phone" hidden></div>
+          <button class="btn btn-secondary" type="button" data-close>Готово</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
