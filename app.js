@@ -131,6 +131,8 @@ function photoHtml(h) {
     ${h.photos.length > 1 ? `<div class="dots">${h.photos.map((_, k) => `<button type="button" data-photo="${h.id}:${k}" aria-label="Фото ${k + 1}" aria-current="${k === i}"></button>`).join('')}</div>` : ''}`;
 }
 
+// Удобства: сначала 5 главных, остальные — по кнопке «Показать все удобства»
+const TOP_FEATURES = 5;
 function renderBaths() {
   $('bath-list').innerHTML = data.halls.map((h, n) => {
     const st = hallState(h);
@@ -139,7 +141,8 @@ function renderBaths() {
       <div class="bath-text">
         <h3 id="bath-${h.id}">${esc(h.name)}</h3>
         <p class="bath-about">${esc(h.about)}</p>
-        <ul class="bath-features">${h.features.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
+        <ul class="bath-features" id="feat-${h.id}">${h.features.map((f, i) => `<li${i >= TOP_FEATURES ? ' class="more"' : ''}>${esc(f)}</li>`).join('')}</ul>
+        ${h.features.length > TOP_FEATURES ? `<button type="button" class="feat-more" data-feat="${h.id}" aria-expanded="false" aria-controls="feat-${h.id}">Показать все удобства <span>+${h.features.length - TOP_FEATURES}</span></button>` : ''}
         <dl class="bath-prices">
           <div><dt>Вс–чт</dt><dd>${rub(h.priceWeekday)}</dd></div>
           <div><dt>Пятница</dt><dd>${rub(h.priceFriday)}</dd></div>
@@ -166,6 +169,15 @@ function updateStates() {
 }
 
 $('bath-list').addEventListener('click', (e) => {
+  const more = e.target.closest('[data-feat]');
+  if (more) {
+    const list = $('feat-' + more.dataset.feat);
+    const open = list.classList.toggle('open');
+    more.setAttribute('aria-expanded', open);
+    const rest = list.querySelectorAll('.more').length;
+    more.innerHTML = open ? 'Свернуть' : `Показать все удобства <span>+${rest}</span>`;
+    return;
+  }
   const d = e.target.closest('[data-photo]');
   if (!d) return;
   const [id, k] = d.dataset.photo.split(':').map(Number);
@@ -268,9 +280,12 @@ function renderForm() {
       (sel.nights === 1 ? ' Нужно на двое суток — нажмите и следующую дату.' : ' Выбрать заново — нажмите любую дату.');
 
   $('guests').textContent = sel.guests;
+  // Доплата: 500 ₽ за каждого гостя сверх тарифа за сутки. Больше суток — отдельной строкой «× 2 суток = …»
   const extra = Math.max(0, sel.guests - hall.baseGuests);
+  const perNight = extra * hall.extraGuestPrice;
   $('guests-hint').innerHTML = `В базовый тариф аренды входит до ${hall.baseGuests} человек, каждый следующий — ${rub(hall.extraGuestPrice)}. Комфортно до ${hall.capacity} гостей.` +
-    (extra ? ` <b>Доплата за ${guestsText(extra)}: +${rub(extra * hall.extraGuestPrice * sel.nights)}</b>` : '');
+    (extra ? `<span class="extra">Доплата за ${extra} ${extra % 10 === 1 && extra % 100 !== 11 ? 'гостя' : 'гостей'}: +${rub(perNight)}</span>` +
+      (sel.nights > 1 ? `<span class="extra">× ${nightsText(sel.nights)} = ${rub(perNight * sel.nights)}</span>` : '') : '');
   renderOverflow();
   renderSummary();
 }
@@ -477,6 +492,13 @@ function reveal() {
 }
 
 track('view');
+// Студии и цены из файла сайта рисуем сразу — не ждём сервер (Google отвечает 3–7 секунд).
+// Сервер потом только подтянет занятые даты и статусы «свободна сегодня»
+if (window.SITE_DATA) {
+  data = { ...window.SITE_DATA, now: Math.floor(Date.now() / 60000) + window.SITE_DATA.tz * 60 };
+  renderCards();
+  renderBaths();
+}
 reveal();
 load();
 setInterval(load, 60_000); // занятость обновляется раз в минуту — без перезагрузки страницы

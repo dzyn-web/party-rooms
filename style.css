@@ -109,7 +109,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; }
 .top-phone { font-variant-numeric: tabular-nums; font-size: 15px; }
 /* Над фото первого экрана шапка прозрачная и светлая; после прокрутки — тёмная плотная */
 .site .top.over { position: fixed; left: 0; right: 0; --fg: var(--on-dark); --muted: rgba(243, 237, 230, .8); --line: transparent; background: transparent; color: var(--fg); padding-top: 24px; padding-bottom: 24px; }
-.site .top.over.solid { --line: rgba(190, 140, 255, .16); background: rgba(10, 7, 14, .94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding-top: 12px; padding-bottom: 12px; }
+.site .top.over.solid { --line: rgba(190, 140, 255, .16); background: #0a070e; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding-top: 12px; padding-bottom: 12px; }
 
 /* ---------- Сетка ---------- */
 .wrap { max-width: 1320px; margin: 0 auto; padding: 0 var(--gutter); }
@@ -443,11 +443,12 @@ select:focus, .field input:focus, .field textarea:focus { border-color: var(--fg
 /* ---------- Плавное появление при прокрутке ----------
    Класс .reveal ставит app.js (без JS всё просто видно сразу). Когда блок доезжает до экрана — получает .in.
    --d — задержка, чтобы пункты одного блока появлялись по очереди, «лесенкой». */
-.reveal { opacity: 0; transform: translateY(28px); filter: blur(5px); transition: opacity .8s cubic-bezier(.2, .7, .2, 1), transform .8s cubic-bezier(.2, .7, .2, 1), filter .8s ease; transition-delay: var(--d, 0s); will-change: opacity, transform; }
-.reveal.reveal-img { transform: scale(1.06); filter: blur(10px) brightness(.6); transition-duration: 1.1s; }
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity .6s cubic-bezier(.2, .7, .2, 1), transform .6s cubic-bezier(.2, .7, .2, 1); transition-delay: var(--d, 0s); }
+/* Фото — только проявление, без увеличения и размытия: так не тормозит на телефоне и не вылезает за край */
+.reveal.reveal-img { transform: none; transition-duration: .8s; }
 .reveal.in { opacity: 1; transform: none; filter: none; }
 /* Фото при «наезде» чуть больше своего места — обрезаем, чтобы страница не ездила вбок */
-.site main { overflow-x: clip; }
+.site main { overflow-x: hidden; overflow-x: clip; }   /* hidden — для старых iPhone, где clip не поддерживается */
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; filter: none; } }
 
 /* ---------- Три студии карточками ---------- */
@@ -535,3 +536,13 @@ select:focus, .field input:focus, .field textarea:focus { border-color: var(--fg
   .top-contacts { flex-direction: column; align-items: flex-start; gap: 0; margin-top: 8px; max-height: 64px; }
   .top-contacts a { font-size: 13px; min-height: 26px; }
 }
+
+/* ---------- Удобства: 5 главных, остальные по кнопке ---------- */
+.bath-features:not(.open) li.more { display: none; }
+.feat-more { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; min-height: 44px; padding: 0 16px; border-radius: var(--radius); border: 1px solid var(--line); background: transparent; color: var(--fg); font-weight: 500; cursor: pointer; }
+.feat-more span { color: var(--accent); font-weight: 600; }
+.feat-more:hover { border-color: var(--accent); }
+
+/* ---------- Доплата за гостей — отдельными строками ---------- */
+#guests-hint .extra { display: block; margin-top: 6px; color: var(--accent); font-weight: 600; }
+#guests-hint .extra + .extra { margin-top: 2px; }
