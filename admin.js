@@ -324,6 +324,87 @@ function openForm(hallId, keep = {}) {
   });
 }
 
+// ---------- Реквизиты для предоплаты: номер, банк, получатель и QR-код ----------
+// Сохраняются в Google и сразу появляются у гостей на экране оплаты — сайт перезаливать не нужно
+$('pay-settings').onclick = async () => {
+  $('modal-body').innerHTML = '<h2>Реквизиты для оплаты</h2><p class="hint">Загружаем…</p>';
+  if (!$('modal').open) $('modal').showModal();
+  let pay;
+  try { pay = (await api('admin_settings')).pay; } catch (err) { $('modal-body').innerHTML = `<h2>Реквизиты для оплаты</h2><p class="error">${esc(err.message)}</p>`; return; }
+  let qr;   // undefined — QR не трогали, '' — убрать, data:image/… — новая картинка
+  $('modal-body').innerHTML = `<h2>Реквизиты для оплаты</h2>
+    <p class="hint">Гость видит их после брони, на экране «Готов внести предоплату».</p>
+    <form id="pf" novalidate>
+      <label class="field"><span>Номер для перевода (СБП)</span><input id="pf-phone" type="tel" inputmode="tel" placeholder="8 (999) 000-00-00" value="${esc(pay.phone)}"></label>
+      <label class="field"><span>Банк</span><input id="pf-bank" maxlength="60" placeholder="Сбербанк" value="${esc(pay.bank)}"></label>
+      <label class="field"><span>Получатель — как его видит отправитель</span><input id="pf-name" maxlength="60" placeholder="Иван И." value="${esc(pay.name)}"></label>
+      <div class="field"><span>QR-код для оплаты</span>
+        <div class="qr-edit">
+          <div class="qr-prev" id="pf-qr-prev">${pay.qr ? `<img src="${esc(pay.qr)}" alt="QR-код">` : '<small>QR-кода нет</small>'}</div>
+          <div class="qr-actions">
+            <label class="btn btn-secondary btn-sm">Загрузить картинку<input type="file" id="pf-qr" accept="image/*" hidden></label>
+            <button class="link" type="button" id="pf-qr-del" ${pay.qr ? '' : 'hidden'}>Убрать QR</button>
+          </div>
+        </div>
+        <small class="hint">Подойдёт скриншот из приложения банка — обрежьте его до самого кода. Нужен постоянный QR, без срока действия.</small>
+      </div>
+      <div class="form-foot"><button class="btn btn-primary" type="submit">Сохранить</button></div>
+      <p class="error" id="pf-error" role="alert"></p>
+    </form>`;
+  const setPrev = (src) => {
+    $('pf-qr-prev').innerHTML = src ? `<img src="${src}" alt="QR-код">` : '<small>QR-кода нет</small>';
+    $('pf-qr-del').hidden = !src;
+  };
+  $('pf-qr').onchange = async () => {
+    const file = $('pf-qr').files[0];
+    if (!file) return;
+    $('pf-error').textContent = '';
+    try { qr = await shrinkImage(file); setPrev(qr); }
+    catch (err) { $('pf-error').textContent = err.message; }
+  };
+  $('pf-qr-del').onclick = () => { qr = ''; setPrev(''); };
+  $('pf').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = $('pf').querySelector('[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Сохраняем…';
+    $('pf-error').textContent = '';
+    try {
+      const body = { save: true, phone: $('pf-phone').value, bank: $('pf-bank').value, name: $('pf-name').value };
+      if (qr !== undefined) body.qr = qr;
+      await api('admin_settings', body);
+      $('modal').close();
+      toast('Реквизиты сохранены — гости уже видят новые');
+    } catch (err) { $('pf-error').textContent = err.message; }
+    finally { btn.disabled = false; btn.textContent = 'Сохранить'; }
+  };
+};
+
+// Картинку QR уменьшаем прямо в браузере: таблица Google хранит в ячейке не больше ~49 000 символов.
+// QR чёрно-белый, поэтому PNG до 360 точек обычно весит в разы меньше и остаётся чётким
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      for (const size of [360, 300, 240]) {
+        const k = Math.min(1, size / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        const g = c.getContext('2d');
+        g.fillStyle = '#fff';
+        g.fillRect(0, 0, c.width, c.height);
+        g.imageSmoothingEnabled = k < 1;
+        g.drawImage(img, 0, 0, c.width, c.height);
+        for (const url of [c.toDataURL('image/png'), c.toDataURL('image/jpeg', 0.85)]) if (url.length <= 49000) return resolve(url);
+      }
+      reject(new Error('Картинка слишком большая — обрежьте скриншот до самого QR-кода'));
+    };
+    img.onerror = () => reject(new Error('Не получилось открыть картинку — нужен PNG или JPG'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 // ---------- Старт ----------
 try { password = sessionStorage.getItem('pr-pass') || ''; } catch {}
 if (!API) { $('login').hidden = false; $('login-error').textContent = 'Не задан адрес сервера в config.js'; }
