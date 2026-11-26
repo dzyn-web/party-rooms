@@ -32,7 +32,9 @@ function dateParen(min) { const d = new Date(min * 60000); return `${d.getUTCDat
 function dateIn(min) { const d = new Date(min * 60000); return `в ${WEEKDAYS_ACC[d.getUTCDay()]}, ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; }
 function addDays(key, n) { const d = new Date(key + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
 function nightPrice(h, key) {
-  if (st.prices && st.prices[key]) return st.prices[key];
+  const sp = st.prices && st.prices[key];
+  if (typeof sp === 'number') return sp;
+  if (sp && sp[h.id]) return Number(sp[h.id]);
   const wd = new Date(key + 'T00:00:00Z').getUTCDay();
   return wd === 5 ? h.priceFriday : wd === 6 ? h.priceSaturday : h.priceWeekday;
 }
@@ -323,6 +325,66 @@ function openForm(hallId, keep = {}) {
     } finally { btn.disabled = false; btn.textContent = 'Забронировать'; }
   });
 }
+
+// ---------- Цены: студии по дням недели, доплата за гостя и особые даты (праздники) ----------
+// Сохраняются в Google — сайт сразу считает по новым ценам, перезаливать ничего не нужно
+const DAY_TITLES = [['priceWeekday', 'Вс–чт'], ['priceFriday', 'Пятница'], ['priceSaturday', 'Суббота'], ['extraGuestPrice', 'Доплата за гостя сверх 8']];
+$('price-settings').onclick = async () => {
+  $('modal-body').innerHTML = '<h2>Цены</h2><p class="hint">Загружаем…</p>';
+  if (!$('modal').open) $('modal').showModal();
+  let pr;
+  try { pr = await api('admin_pricing'); } catch (err) { $('modal-body').innerHTML = `<h2>Цены</h2><p class="error">${esc(err.message)}</p>`; return; }
+  // Строка праздника: дата сверху, под ней цены трёх студий с подписями
+  const dateRow = (key = '', vals = {}) => `<div class="pd-row">
+      <div class="pd-top"><input type="date" class="pd-date" value="${esc(key)}" aria-label="Дата заезда"><button type="button" class="icon-btn pd-del" aria-label="Убрать дату">×</button></div>
+      <div class="pd-prices">${pr.halls.map((h) => `<label><small>${esc(h.name)}</small><input type="number" inputmode="numeric" min="0" step="100" class="pd-price" data-hall="${h.id}" value="${vals[h.id] ?? ''}" placeholder="обычная"></label>`).join('')}</div>
+    </div>`;
+  // Старый формат «одна цена для всех студий» превращаем в цены по студиям
+  const dates = Object.entries(pr.dates || {}).sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => [k, typeof v === 'number' ? Object.fromEntries(pr.halls.map((h) => [h.id, v])) : v]);
+  $('modal-body').innerHTML = `<h2>Цены</h2>
+    <p class="hint">Цена за сутки в рублях. Сохранили — сайт сразу считает по новым ценам.</p>
+    <form id="prf" novalidate>
+      ${pr.halls.map((h) => `<fieldset class="pr-hall"><legend>${esc(h.name)}</legend>
+        <div class="pr-grid">${DAY_TITLES.map(([k, t]) => `<label class="field"><span>${t}</span><input type="number" inputmode="numeric" min="0" step="100" data-hall="${h.id}" data-k="${k}" value="${h[k]}"></label>`).join('')}</div>
+      </fieldset>`).join('')}
+      <div class="field"><span>Особые даты — праздники, Новый год</span>
+        <p class="hint">Дата заезда и цена ночи для каждой студии. Пустая клетка — в этот день обычная цена студии.</p>
+        <div id="pd-list">${dates.map(([k, v]) => dateRow(k, v)).join('')}</div>
+        <button type="button" class="btn btn-secondary btn-sm" id="pd-add">+ Добавить дату</button>
+      </div>
+      <div class="form-foot"><button class="btn btn-primary" type="submit">Сохранить цены</button></div>
+      <p class="error" id="prf-error" role="alert"></p>
+    </form>`;
+  $('pd-add').onclick = () => { $('pd-list').insertAdjacentHTML('beforeend', dateRow()); $('pd-list').lastElementChild.querySelector('.pd-date').focus(); };
+  $('pd-list').onclick = (e) => { const x = e.target.closest('.pd-del'); if (x) x.closest('.pd-row').remove(); };
+  $('prf').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = $('prf').querySelector('[type="submit"]');
+    const halls = {};
+    for (const inp of $('prf').querySelectorAll('.pr-grid input')) (halls[inp.dataset.hall] ||= {})[inp.dataset.k] = inp.value;
+    const out = {};
+    for (const row of $('pd-list').querySelectorAll('.pd-row')) {
+      const key = row.querySelector('.pd-date').value;
+      const vals = {};
+      for (const inp of row.querySelectorAll('.pd-price')) if (inp.value !== '') vals[inp.dataset.hall] = inp.value;
+      if (!key && !Object.keys(vals).length) continue;          // пустая строка — пропускаем
+      if (!key) { $('prf-error').textContent = 'У одной из особых цен не указана дата'; return; }
+      if (out[key]) { $('prf-error').textContent = `Дата ${key.split('-').reverse().join('.')} указана дважды — оставьте одну строку`; return; }
+      out[key] = vals;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Сохраняем…';
+    $('prf-error').textContent = '';
+    try {
+      await api('admin_pricing', { save: true, halls, dates: out });
+      $('modal').close();
+      toast('Цены сохранены — сайт уже считает по новым');
+      await refresh();
+    } catch (err) { $('prf-error').textContent = err.message; }
+    finally { btn.disabled = false; btn.textContent = 'Сохранить цены'; }
+  };
+};
 
 // ---------- Реквизиты для предоплаты: номер, банк, получатель и QR-код ----------
 // Сохраняются в Google и сразу появляются у гостей на экране оплаты — сайт перезаливать не нужно

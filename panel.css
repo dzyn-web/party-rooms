@@ -182,3 +182,18 @@ body.panel { min-height: 100vh; }
 .qr-prev small { color: #6b6b6b; font-size: 12px; text-align: center; padding: 8px; }
 .qr-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .qr-actions .btn { cursor: pointer; }
+
+/* ---------- Цены в админке ---------- */
+.pr-hall { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 4px; margin: 0 0 12px; }
+.pr-hall legend { font-family: var(--font-display); font-weight: 700; padding: 0 6px; }
+.pr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+.pr-grid .field span { font-size: 13px; }
+.pd-row { border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 8px; background: var(--surface); }
+.pd-top { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.pd-top .pd-date { flex: 1; }
+.pd-prices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pd-prices label { display: flex; flex-direction: column; gap: 4px; }
+.pd-prices small { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .03em; }
+.pd-row input { width: 100%; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 8px; font-size: 15px; color: var(--fg); }
+.pd-row .icon-btn { width: 36px; height: 36px; flex-shrink: 0; }
+#pd-add { margin-top: 4px; }

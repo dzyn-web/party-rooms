@@ -105,13 +105,23 @@ async function load() {
     clockDelta = data.now - Math.floor(Date.now() / 60000);
     $('load-error').hidden = true;
     // Первый раз рисуем студии целиком (и подключаем к плавному появлению), дальше раз в минуту — только статус
-    if (!document.querySelector('.bath')) { renderCards(); renderBaths(); reveal(); } else updateStates();
+    if (!document.querySelector('.bath')) { renderCards(); renderBaths(); reveal(); }
+    else {
+      // Студии уже нарисованы из файла сайта. Если владелец поменял цены в админке — перерисовываем с новыми
+      if (shownPrices !== priceKey(data)) { renderCards(); renderBaths(); }
+      updateStates();
+    }
+    shownPrices = priceKey(data);
     for (const a of document.querySelectorAll('.phone-link')) a.href = 'tel:+' + data.phone.replace(/\D/g, '');
     if (sel && !$('sheet').hidden && $('done').hidden) renderForm();
   } catch {
     if (!data) { $('load-error').hidden = false; $('bath-list').innerHTML = ''; }
   }
 }
+
+// Отпечаток цен: по нему видно, поменялись ли цены с момента отрисовки
+let shownPrices = null;
+const priceKey = (d) => JSON.stringify([d.halls.map((h) => [h.id, h.priceWeekday, h.priceFriday, h.priceSaturday, h.extraGuestPrice]), d.prices]);
 
 // ---------- Три студии карточками: фото, площадь, сколько гостей, цена «от» ----------
 function renderCards() {
@@ -441,12 +451,19 @@ $('form').addEventListener('submit', async (e) => {
   btn.disabled = true;
   btn.textContent = 'Бронируем…';
   $('error').textContent = '';
+  // Сервер иногда «просыпается» до 10–15 секунд — показываем, что всё идёт, чтобы гость не ушёл
+  const slow = [
+    setTimeout(() => { btn.textContent = 'Ещё пара секунд…'; }, 4000),
+    setTimeout(() => { $('error').textContent = 'Сохраняем бронь — не закрывайте страницу, осталось чуть-чуть.'; }, 9000),
+  ];
   const hall = hallById(sel.hallId);
   try {
     const { status, data: res } = await apiBook({
       hallId: sel.hallId, date: sel.date, nights: sel.nights, guests: sel.guests,
       name: $('name').value.trim(), phone: '7' + phoneDigits(), comment: $('comment').value.trim(), website: $('website').value,
     });
+    slow.forEach(clearTimeout);
+    if ($('error').textContent.startsWith('Сохраняем бронь')) $('error').textContent = '';
     if (status === 201) {
       // Бронь окончательная после предоплаты — сразу показываем итог и кнопку «Готов внести предоплату»
       showDone(hall, res);
@@ -461,6 +478,7 @@ $('form').addEventListener('submit', async (e) => {
   } catch {
     $('error').textContent = `Нет связи с сервером. Проверьте интернет или позвоните: ${data.phone}`;
   } finally {
+    slow.forEach(clearTimeout);
     sending = false;
     btn.textContent = 'Забронировать';
     if (!$('form').hidden) renderSummary();
@@ -505,6 +523,7 @@ if (window.SITE_DATA) {
   data = { ...window.SITE_DATA, now: Math.floor(Date.now() / 60000) + window.SITE_DATA.tz * 60 };
   renderCards();
   renderBaths();
+  shownPrices = priceKey(data);
 }
 reveal();
 load();
