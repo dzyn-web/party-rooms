@@ -1,3 +1,3 @@
 User-agent: *
-Disallow: /party-rooms/admin.html
-Sitemap: https://dzyn-web.github.io/party-rooms/sitemap.xml
+Disallow: /admin.html
+Sitemap: https://partyrooms38.ru/sitemap.xml
