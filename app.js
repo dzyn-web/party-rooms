@@ -35,10 +35,16 @@ const nightStart = (key) => dayStart(key) + data.checkinHour * 60;
 const nightEnd = (key) => dayStart(addDays(key, 1)) + data.checkoutHour * 60;
 const isFree = (hallId, start, end) => !data.busy.some((b) => b.hallId === hallId && start < b.end && end > b.start);
 const nightFree = (hallId, key) => isFree(hallId, nightStart(key), nightEnd(key));
-// Можно ли заехать в эту дату: дата не прошла и ночь свободна
-const canCheckIn = (hallId, key) => key >= keyOf(nowMin()) && nightFree(hallId, key);
-// Цена ночи: особая цена на дату, иначе ночь с пятницы — тариф пятницы, с субботы — субботы, остальные — будни
+// Новый год — пакетом: ночи с 31 декабря и с 1 января сдаются только вместе (заезд 31.12, выезд 02.01)
+const isNY31 = (key) => key.slice(5) === '12-31';
+const isNY1 = (key) => key.slice(5) === '01-01';
+const nyNight = (key) => isNY31(key) || isNY1(key);
+const hasNY = (date, nights) => { for (let i = 0; i < nights; i++) if (nyNight(addDays(date, i))) return true; return false; };
+// Можно ли заехать в эту дату: дата не прошла и ночь свободна. 31 декабря — если свободно и 1 января; с 1 января заезда нет
+const canCheckIn = (hallId, key) => key >= keyOf(nowMin()) && nightFree(hallId, key) && !isNY1(key) && (!isNY31(key) || nightFree(hallId, addDays(key, 1)));
+// Цена ночи: Новый год — половина цены пакета, особая цена на дату, иначе ночь с пятницы — тариф пятницы, с субботы — субботы, остальные — будни
 function nightPrice(hall, key) {
+  if (nyNight(key) && hall.priceNewYear) return isNY31(key) ? Math.ceil(hall.priceNewYear / 2) : Math.floor(hall.priceNewYear / 2);
   const sp = data.prices[key];
   if (typeof sp === 'number') return sp;
   if (sp && sp[hall.id]) return Number(sp[hall.id]);
@@ -121,7 +127,7 @@ async function load() {
 
 // Отпечаток цен: по нему видно, поменялись ли цены с момента отрисовки
 let shownPrices = null;
-const priceKey = (d) => JSON.stringify([d.halls.map((h) => [h.id, h.priceWeekday, h.priceFriday, h.priceSaturday, h.extraGuestPrice]), d.prices]);
+const priceKey = (d) => JSON.stringify([d.halls.map((h) => [h.id, h.priceWeekday, h.priceFriday, h.priceSaturday, h.extraGuestPrice, h.priceNewYear]), d.prices]);
 
 // ---------- Три студии карточками: фото, площадь, сколько гостей, цена «от» ----------
 function renderCards() {
@@ -150,6 +156,7 @@ function photoHtml(h) {
 const TOP_FEATURES = 5;
 const moreCount = (h) => Math.max(0, h.features.length - TOP_FEATURES) + (h.extras || []).length;
 function renderBaths() {
+  renderNYPrices();
   $('bath-list').innerHTML = data.halls.map((h, n) => {
     const st = hallState(h);
     return `<article class="bath${n % 2 ? ' flip' : ''}" aria-labelledby="bath-${h.id}">
@@ -165,6 +172,7 @@ function renderBaths() {
           <div><dt>Вс–чт</dt><dd>${rub(h.priceWeekday)}</dd></div>
           <div><dt>Пятница</dt><dd>${rub(h.priceFriday)}</dd></div>
           <div><dt>Суббота</dt><dd>${rub(h.priceSaturday)}</dd></div>
+          ${h.priceNewYear ? `<div class="ny-price"><dt>Новый год, 31.12–02.01</dt><dd>${rub(h.priceNewYear)} за двое суток</dd></div>` : ''}
         </dl>
         <p class="bath-note">Цена за сутки. В базовый тариф аренды входит до ${h.baseGuests} человек, каждый следующий — ${rub(h.extraGuestPrice)}. Комфортно до ${h.capacity} гостей.</p>
         <div class="bath-actions">
@@ -174,6 +182,14 @@ function renderBaths() {
       </div>
     </article>`;
   }).join('');
+}
+
+// Цены Нового года в «Условиях» — из тех же данных, что и календарь (владелец меняет их в админке)
+function renderNYPrices() {
+  const by = new Map();
+  for (const h of data.halls) if (h.priceNewYear) by.set(h.priceNewYear, [...(by.get(h.priceNewYear) || []), h.name]);
+  const text = [...by].map(([p, names]) => `${names.join(' и ')} — ${rub(p)}`).join(', ');
+  for (const el of document.querySelectorAll('[data-ny-prices]')) if (text) el.textContent = text;
 }
 
 function updateStates() {
@@ -249,6 +265,14 @@ function maxNightsFrom(hallId, key) {
   return n;
 }
 
+// Подгоняем выбор под новогодний пакет: нажали 1 января — заезд 31-го; бронь кончается ночью 31-го — добавляем 1-е.
+// Не влезает (занято, слишком долго) — null
+function fitNY(hallId, date, nights) {
+  if (isNY1(date)) { date = addDays(date, -1); nights++; }
+  if (isNY31(addDays(date, nights - 1))) nights++;
+  return canCheckIn(hallId, date) && nights <= maxNightsFrom(hallId, date) ? { date, nights } : null;
+}
+
 // Календарь: месяц за месяцем, 7 дней в ряд (пн–вс), под числом — цена ночи.
 // Выбранные сутки подсвечены: первая дата — заезд, дальше — следующие ночи
 function renderCalendar(hall) {
@@ -267,17 +291,29 @@ function renderCalendar(hall) {
     for (let d = 1; d <= days; d++) {
       const key = `${first.slice(0, 8)}${String(d).padStart(2, '0')}`;
       if (key < today || key > last) { cells += `<span class="cal-day past"><b>${d}</b></span>`; continue; }
-      const ok = canCheckIn(hall.id, key);
+      // 1 января само по себе не заезд, но нажать можно — выберем пакет 31.12–02.01 или продлим бронь до него
+      const ok = canCheckIn(hall.id, key) || (isNY1(key) && canCheckIn(hall.id, addDays(key, -1)));
       const on = inStay(key);
+      // Значок ₽ в клетке — отдельным span: на самых узких телефонах прячем его, чтобы цена влезала
+      const calRub = (n) => `${n.toLocaleString('ru-RU')}<span class="cur"> ₽</span>`;
+      const label = !ok ? 'занято' : isNY31(key) && hall.priceNewYear ? calRub(hall.priceNewYear) : isNY1(key) && hall.priceNewYear ? '2 суток' : calRub(nightPrice(hall, key));
+      const ariaPrice = !ok ? 'занято' : rub(nightPrice(hall, key));
       const cls = on ? ` on${key === sel.date ? ' first' : ''}${key === addDays(sel.date, sel.nights - 1) ? ' last' : ''}` : '';
-      cells += `<button type="button" class="cal-day${cls}" data-date="${key}" aria-pressed="${on}" ${ok ? '' : 'disabled'}
-        aria-label="${dateText(key)}, ${ok ? rub(nightPrice(hall, key)) : 'занято'}"><b>${d}</b><i>${ok ? rub(nightPrice(hall, key)) : 'занято'}</i></button>`;
+      const ny = ok && nyNight(key) && hall.priceNewYear ? ' ny' : '';
+      cells += `<button type="button" class="cal-day${cls}${ny}" data-date="${key}" aria-pressed="${on}" ${ok ? '' : 'disabled'}
+        aria-label="${dateText(key)}, ${ny ? 'Новый год, ' + rub(hall.priceNewYear) + ' за двое суток' : ariaPrice}"><b>${d}</b><i>${label}</i></button>`;
     }
     html += `<div class="cal-month"><p class="cal-title">${MONTHS_TITLE[m - 1]}</p><div class="cal-grid">${cells}</div></div>`;
+    if (m === 12 && hall.priceNewYear) html += `<p class="cal-ny">${nyText(hall)}</p>`;
     if (++m > 12) { m = 1; y++; }
   }
   if (`${y}-${String(m).padStart(2, '0')}-01` <= last) html += '<button type="button" class="cal-more" data-more>Показать следующий месяц</button>';
   $('dates').innerHTML = html;
+}
+
+function nyText(hall) {
+  return `<b>Новый год — только на двое суток:</b> заезд 31 декабря в ${pad(data.checkinHour)}, выезд 2 января в ${pad(data.checkoutHour)}. ` +
+    `Студия ${esc(hall.name)} — ${rub(hall.priceNewYear)} за двое суток. Чтобы закрепить дату, нужна предоплата ${data.nyPrepayPercent || 50}% от суммы — так мы уверены, что бронь не отменится в последний момент.`;
 }
 
 function renderForm() {
@@ -288,12 +324,18 @@ function renderForm() {
   $('hall-pick').innerHTML = data.halls.map((h) => `<button type="button" class="hall-opt" role="radio" data-hall="${h.id}" aria-checked="${h.id === hall.id}">
       <b>${esc(h.name)}</b><small>от ${rub(h.priceWeekday)} за сутки</small></button>`).join('');
   if (sel.date && !canCheckIn(hall.id, sel.date)) { sel.date = null; sel.nights = 1; }
-  if (sel.date) sel.nights = Math.max(1, Math.min(sel.nights, maxNightsFrom(hall.id, sel.date)));
+  if (sel.date) {
+    sel.nights = Math.max(1, Math.min(sel.nights, maxNightsFrom(hall.id, sel.date)));
+    let f = fitNY(hall.id, sel.date, sel.nights);
+    while (!f && sel.nights > 1) f = fitNY(hall.id, sel.date, --sel.nights);
+    if (f) Object.assign(sel, f); else { sel.date = null; sel.nights = 1; }
+  }
 
   renderCalendar(hall);
   $('dates-hint').textContent = !sel.date
     ? 'Выберите дату заезда. Нужно на двое суток или больше — отметьте и последнюю дату.'
     : `Заезд ${dateText(sel.date)} в ${pad(data.checkinHour)}, выезд ${dateText(addDays(sel.date, sel.nights))} в ${pad(data.checkoutHour)} — ${nightsText(sel.nights)}.` +
+      (hasNY(sel.date, sel.nights) ? ` Новый год: предоплата ${data.nyPrepayPercent || 50}% от суммы.` : '') +
       (sel.nights === 1 ? ' Нужно на двое суток — нажмите и следующую дату.' : ' Выбрать заново — нажмите любую дату.');
 
   $('guests').textContent = sel.guests;
@@ -345,12 +387,16 @@ $('dates').onclick = (e) => {
   const b = e.target.closest('[data-date]');
   if (!b || b.disabled) return;
   const key = b.dataset.date;
-  if (sel.date && sel.nights === 1 && key > sel.date) {
-    const n = daysBetween(sel.date, key) + 1;
-    if (n <= maxNightsFrom(sel.hallId, sel.date)) { sel.nights = n; renderForm(); return; }
-  }
-  sel.date = key;
-  sel.nights = 1;
+  // Продлеваем, если выбрана одна дата или ровно новогодний пакет (31.12 на двое суток)
+  const single = sel.date && (sel.nights === 1 || (isNY31(sel.date) && sel.nights === 2));
+  const longer = single && key >= addDays(sel.date, sel.nights) ? fitNY(sel.hallId, sel.date, daysBetween(sel.date, key) + 1) : null;
+  const next = longer || fitNY(sel.hallId, key, 1);
+  if (!next) return;
+  Object.assign(sel, next);
+  // Бронь ушла в следующий месяц (Новый год: 31.12 → 02.01) — показываем и его, чтобы было видно выезд
+  const [y0, m0] = keyOf(nowMin()).split('-').map(Number);
+  const [y1, m1] = addDays(sel.date, sel.nights - 1).split('-').map(Number);
+  calMonths = Math.max(calMonths, (y1 - y0) * 12 + m1 - m0 + 1);
   renderForm();
 };
 $('g-plus').onclick = () => { sel.guests = Math.min(40, sel.guests + 1); renderForm(); };

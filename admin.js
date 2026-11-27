@@ -31,7 +31,10 @@ function dayText(min) {
 function dateParen(min) { const d = new Date(min * 60000); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} (${WEEKDAYS[d.getUTCDay()]})`; }
 function dateIn(min) { const d = new Date(min * 60000); return `в ${WEEKDAYS_ACC[d.getUTCDay()]}, ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; }
 function addDays(key, n) { const d = new Date(key + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+// Новый год: ночи с 31.12 и 01.01 — каждая по половине цены пакета (как на сайте и в Google)
+const nyNight = (key) => key.slice(5) === '12-31' || key.slice(5) === '01-01';
 function nightPrice(h, key) {
+  if (nyNight(key) && h.priceNewYear) return key.slice(5) === '12-31' ? Math.ceil(h.priceNewYear / 2) : Math.floor(h.priceNewYear / 2);
   const sp = st.prices && st.prices[key];
   if (typeof sp === 'number') return sp;
   if (sp && sp[h.id]) return Number(sp[h.id]);
@@ -284,13 +287,14 @@ function openForm(hallId, keep = {}) {
     const n = Math.round((keyToMin(out) - keyToMin(d)) / 1440);
     const unknown = $('bf-guests-unknown').checked;
     const g = unknown ? h.baseGuests : Number($('bf-guests').value);
-    let total = 0;
-    for (let i = 0; i < n; i++) total += nightPrice(h, addDays(d, i));
+    let total = 0, ny = false;
+    for (let i = 0; i < n; i++) { total += nightPrice(h, addDays(d, i)); ny ||= nyNight(addDays(d, i)); }
     total += Math.max(0, g - h.baseGuests) * (h.extraGuestPrice || 0) * n;
+    const pct = st.nyPrepayPercent || 50;
     $('bf-sum').innerHTML = g > h.capacity
       ? `<p class="error">В студии ${esc(h.name)} комфортно до ${h.capacity} гостей</p>`
       : `<p>Заезд ${dateIn(keyToMin(d))} (${hr(st.checkinHour)})</p><p>Выезд ${dateIn(keyToMin(out))} (${hr(st.checkoutHour)})</p>
-         <p>Гостей: ${unknown ? 'не известно' : g}</p><p class="bf-total">Сумма: <b>${rub(total)}</b></p>`;
+         <p>Гостей: ${unknown ? 'не известно' : g}</p><p class="bf-total">Сумма: <b>${rub(total)}</b></p>${ny ? `<p class="hint">Новый год: предоплата ${pct}% — ${rub(Math.ceil(total * pct / 100))}</p>` : ''}`;
   };
   const form = $('bf');
   form.addEventListener('input', sum);
@@ -328,7 +332,7 @@ function openForm(hallId, keep = {}) {
 
 // ---------- Цены: студии по дням недели, доплата за гостя и особые даты (праздники) ----------
 // Сохраняются в Google — сайт сразу считает по новым ценам, перезаливать ничего не нужно
-const DAY_TITLES = [['priceWeekday', 'Вс–чт'], ['priceFriday', 'Пятница'], ['priceSaturday', 'Суббота'], ['extraGuestPrice', 'Доплата за гостя сверх 8']];
+const DAY_TITLES = [['priceWeekday', 'Вс–чт'], ['priceFriday', 'Пятница'], ['priceSaturday', 'Суббота'], ['extraGuestPrice', 'Доплата за гостя сверх 8'], ['priceNewYear', 'Новый год, 31.12–02.01 (за двое суток)']];
 $('price-settings').onclick = async () => {
   $('modal-body').innerHTML = '<h2>Цены</h2><p class="hint">Загружаем…</p>';
   if (!$('modal').open) $('modal').showModal();
@@ -343,10 +347,10 @@ $('price-settings').onclick = async () => {
   const dates = Object.entries(pr.dates || {}).sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => [k, typeof v === 'number' ? Object.fromEntries(pr.halls.map((h) => [h.id, v])) : v]);
   $('modal-body').innerHTML = `<h2>Цены</h2>
-    <p class="hint">Цена за сутки в рублях. Сохранили — сайт сразу считает по новым ценам.</p>
+    <p class="hint">Цена за сутки в рублях. Новый год — цена сразу за двое суток (заезд 31.12, выезд 02.01), предоплата за него — 50%. Сохранили — сайт сразу считает по новым ценам.</p>
     <form id="prf" novalidate>
       ${pr.halls.map((h) => `<fieldset class="pr-hall"><legend>${esc(h.name)}</legend>
-        <div class="pr-grid">${DAY_TITLES.map(([k, t]) => `<label class="field"><span>${t}</span><input type="number" inputmode="numeric" min="0" step="100" data-hall="${h.id}" data-k="${k}" value="${h[k]}"></label>`).join('')}</div>
+        <div class="pr-grid">${DAY_TITLES.map(([k, t]) => `<label class="field"><span>${t}</span><input type="number" inputmode="numeric" min="0" step="100" data-hall="${h.id}" data-k="${k}" value="${h[k] ?? ''}"></label>`).join('')}</div>
       </fieldset>`).join('')}
       <div class="field"><span>Особые даты — праздники, Новый год</span>
         <p class="hint">Дата заезда и цена ночи для каждой студии. Пустая клетка — в этот день обычная цена студии.</p>

@@ -197,3 +197,4 @@ body.panel { min-height: 100vh; }
 .pd-row input { width: 100%; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 8px; font-size: 15px; color: var(--fg); }
 .pd-row .icon-btn { width: 36px; height: 36px; flex-shrink: 0; }
 #pd-add { margin-top: 4px; }
+.pr-grid .field:nth-child(5) { grid-column: 1 / -1; }
